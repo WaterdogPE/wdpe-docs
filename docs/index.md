@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /waterdogpe-setup/starting-waterdog
+      link: /overview
     - theme: alt
       text: Plugin API Guide
       link: /entry-level-plugin-api-guide/prerequisites

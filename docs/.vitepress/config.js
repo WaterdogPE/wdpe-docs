@@ -58,6 +58,7 @@ export default defineConfig({
       {
         text: 'WaterdogPE Guides',
         items: [
+          { text: 'Overview', link: '/overview' },
           {
             text: 'WaterdogPE Setup',
             link: '/waterdogpe-setup/starting-waterdog',
@@ -87,6 +88,7 @@ export default defineConfig({
 
     // One site-wide sidebar grouped per book (a "shelf" in BookStack terms).
     sidebar: [
+      { text: 'Overview', link: '/overview' },
       {
         text: 'WaterdogPE Setup',
         collapsed: false,
