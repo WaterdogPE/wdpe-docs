@@ -4,7 +4,7 @@ title: Software Compatibility
 
 # Software Compatibility
 
-'WaterdogPE is currently not compatible with every server software. This table should show which ones are generally supported and which ones are not.
+WaterdogPE is not compatible with every server software. This table shows which ones are generally supported and which ones are not. Unofficial forks and "spoons" are not supported.
 
 | Software        | Compatible         
 | ------------- |:-------------:
@@ -17,4 +17,4 @@ title: Software Compatibility
 | JukeboxMC | yes
 | PowerNukkit | **no**
 | PowerNukkitX | **no**
-| Bedrock Dedicated Server | *may work*'
+| Bedrock Dedicated Server | *may work*

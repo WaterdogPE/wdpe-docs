@@ -66,7 +66,7 @@ export default defineConfig({
             text: 'Entry Level Plugin API Guide',
             link: '/entry-level-plugin-api-guide/prerequisites',
           },
-          { text: 'Plugins', link: '/plugins/introduction' },
+          { text: 'Plugin API', link: '/plugins/introduction' },
           {
             text: 'Integration',
             link: '/integration/integrating-with-slappers-npcs',
@@ -74,10 +74,12 @@ export default defineConfig({
         ],
       },
       {
-        text: 'StarGate Guides',
+        text: 'Suggested Plugins & Extensions',
         items: [
-          { text: 'StarGate Commons', link: '/stargate-commons/stargate-modules' },
-          { text: 'StarGate Plugins', link: '/stargate-plugins/server-setup' },
+          { text: 'Introduction', link: '/extensions/introduction' },
+          { text: 'StarGate Modules', link: '/stargate-commons/stargate-modules' },
+          { text: 'StarGate: Server Setup', link: '/stargate-plugins/server-setup' },
+          { text: 'StarGate: Client Setup', link: '/stargate-plugins/client-setup' },
         ],
       },
       { text: 'Main Site', link: 'https://waterdog.dev' },
@@ -101,18 +103,20 @@ export default defineConfig({
         items: [
           { text: 'Prerequisites', link: '/entry-level-plugin-api-guide/prerequisites' },
           { text: 'Maven Setup', link: '/entry-level-plugin-api-guide/maven-setup' },
+          { text: 'Your First Plugin', link: '/entry-level-plugin-api-guide/first-plugin' },
         ],
       },
       {
-        text: 'Plugins',
+        text: 'Plugin API',
         collapsed: false,
         items: [
           { text: 'Introduction', link: '/plugins/introduction' },
+          { text: 'Working with Players', link: '/plugins/players-guide' },
           { text: 'Commands Guide', link: '/plugins/commands-guide' },
           { text: 'Events Guide', link: '/plugins/events-guide' },
           { text: 'Fallback & Join Handler', link: '/plugins/fallback-join-handler' },
+          { text: 'Scheduling Tasks', link: '/plugins/scheduling-task' },
           { text: 'Proxy Communication', link: '/plugins/proxy-communication' },
-          { text: 'Scheduling Task', link: '/plugins/scheduling-task' },
         ],
       },
       {
@@ -126,18 +130,19 @@ export default defineConfig({
         ],
       },
       {
-        text: 'StarGate Commons',
-        collapsed: true,
+        text: 'Suggested Plugins & Extensions',
+        collapsed: false,
         items: [
-          { text: 'StarGate Modules', link: '/stargate-commons/stargate-modules' },
-        ],
-      },
-      {
-        text: 'StarGate Plugins',
-        collapsed: true,
-        items: [
-          { text: 'Server Setup', link: '/stargate-plugins/server-setup' },
-          { text: 'Client Setup', link: '/stargate-plugins/client-setup' },
+          { text: 'Introduction', link: '/extensions/introduction' },
+          {
+            text: 'StarGate',
+            collapsed: true,
+            items: [
+              { text: 'StarGate Modules', link: '/stargate-commons/stargate-modules' },
+              { text: 'Server Setup', link: '/stargate-plugins/server-setup' },
+              { text: 'Client Setup', link: '/stargate-plugins/client-setup' },
+            ],
+          },
         ],
       },
     ],

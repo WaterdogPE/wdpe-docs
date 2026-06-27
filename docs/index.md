@@ -29,7 +29,7 @@ features:
   - title: Plugin API
     details: Commands, events, fallback & join handling, and inter-proxy messaging.
     link: /plugins/introduction
-  - title: StarGate
-    details: StarGate commons modules and the StarGate plugin server/client setup guides.
-    link: /stargate-commons/stargate-modules
+  - title: Suggested Plugins & Extensions
+    details: Recommended add-ons for common needs, like StarGate for inter-server communication.
+    link: /extensions/introduction
 ---

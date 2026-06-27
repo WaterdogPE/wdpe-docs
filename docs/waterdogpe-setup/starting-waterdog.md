@@ -4,34 +4,116 @@ title: Starting Waterdog
 
 # Starting Waterdog
 
-'To start pre-compiled WaterdogPE (WDPE) you will need Java 11 installed. If you want to start proxy with older version of Java, you must compile WDPE yourself.  
-1. Download the latest built `Waterdog.jar` from our jenkins server.
-2. Place the file inside a new directory dedicated to Waterdog.
-3. Create a new startup script to launch the the JAR.
-4. Once you have successfully installed WDPE, it is time to get it working properly. One of the most essential steps is to configure your downstream server instances (Nukkit, PMMP) to run in offline-mode, which can be achieved by modifying `server.properties`. You would need to set xbox-auth to false.
-5. PocketMine-MP has added another option which must be disabled when using proxy. Since server thinks player is unathenticated, his XUID will be unset. PMMP implements new security check where it verifies if players last XUID match the current one. In proxy case it will *not* match and player will be disconnected. To solve this issue, please disable `player.verify-xuid` in `pocketmine.yml` file.
+This page walks you through getting a WaterdogPE proxy up and running for the
+first time. If you have never used a Bedrock proxy before, just follow the steps
+in order.
+
+## What is WaterdogPE?
+
+WaterdogPE (often shortened to **WDPE**) is a proxy for Minecraft: Bedrock
+Edition. It sits between your players and your actual game servers
+("downstream" servers such as PocketMine‑MP or Nukkit) and lets a player move
+between those servers without ever leaving the connection. This is how networks
+build features like a lobby, minigames and survival worlds that all feel like
+"one server".
+
+## Requirements
+
+- **Java 17 or newer.** This is the most common setup mistake — make sure you
+  install a Java **17+** runtime (JDK or JRE). You can check your version with
+  `java -version`. Older WaterdogPE 1.x builds used Java 11, but current
+  releases require Java 17.
+- A machine to run it on (your own PC for testing, or a server/VPS for
+  production).
+- At least one downstream server to connect to (see
+  [Software Compatibility](./software-compatibility)).
+
+## Downloading WaterdogPE
+
+1. Download the latest `Waterdog.jar` from the
+   [GitHub releases page](https://github.com/WaterdogPE/WaterdogPE/releases) or
+   from [waterdog.dev](https://waterdog.dev). If you want a build for an older
+   Java version you will need to [compile it yourself](https://github.com/WaterdogPE/WaterdogPE/blob/master/COMPILING.md).
+2. Place the file inside a new, empty folder dedicated to the proxy.
+3. Create a startup script (see below) so you can launch it easily.
+
+On the **first launch** WaterdogPE generates its configuration files
+(`config.yml`, `lang.ini`) and then starts. Stop the proxy, edit `config.yml` to
+point at your downstream servers, and start it again. See
+[Proxy Configuration](./proxy-configuration) for the full list of options.
+
+## Preparing your downstream servers
+
+A proxy authenticates players with Xbox Live itself, so your downstream servers
+must run in **offline mode**. If you skip this step players will fail to connect.
+
+1. On each downstream server, disable Xbox authentication. On PocketMine‑MP and
+   Nukkit this means setting `xbox-auth=false` in `server.properties`.
+2. **PocketMine‑MP only:** also disable the XUID check. Because the downstream
+   server sees the player as unauthenticated, PMMP's "verify XUID" security
+   check will not match and the player will be disconnected. Set
+   `player.verify-xuid` to `false` in `pocketmine.yml`:
+
+   ```yaml
+   player:
+     verify-xuid: false
+   ```
+
+> WaterdogPE still authenticates players against Xbox Live at the proxy (when
+> `online_mode` is enabled), so your network as a whole stays secure even though
+> the individual downstream servers run offline.
 
 ## Startup script
-When using Java 11 we recommend adding this parameters, which will add support for some netty features.
+
+The recommended JVM flags below enable some Netty features WaterdogPE relies on:
+
 ```
 -Dio.netty.tryReflectionSetAccessible=true
 --add-opens java.base/jdk.internal.misc=ALL-UNNAMED
 ```
-Minimum allocated memory can be set using `-Xms<size>`, maximum `-Xmx<size>`.
-#### Windows
-In dedicated directory create `start.bat` file with following code:
-```
+
+You also control how much memory the proxy may use:
+
+- `-Xms<size>` — initial memory pool (e.g. `-Xms512M`)
+- `-Xmx<size>` — maximum memory pool (e.g. `-Xmx4G`)
+
+Adjust these to match your hardware and player count.
+
+### Windows
+
+Create a `start.bat` file next to `Waterdog.jar`:
+
+```bat
 @echo off
-java -Xms512M -Xmx4G -jar Waterdog.jar
+java -Xms512M -Xmx4G -Dio.netty.tryReflectionSetAccessible=true --add-opens java.base/jdk.internal.misc=ALL-UNNAMED -jar Waterdog.jar
 pause
 ```
-#### Linux
-For Linux it is recommended to start proxy in bash environment. Create `start.sh` file with following code:
-```
+
+Double-click `start.bat` to launch the proxy.
+
+### Linux
+
+Create a `start.sh` file next to `Waterdog.jar`:
+
+```bash
 #!/bin/bash
-java -Xms512M -Xmx4G -jar Waterdog.jar
+java -Xms512M -Xmx4G -Dio.netty.tryReflectionSetAccessible=true --add-opens java.base/jdk.internal.misc=ALL-UNNAMED -jar Waterdog.jar
 ```
 
-While using above code in your startup scripts is a template, you can also replace **512M** with the amount of **initial memory pool** that you'd like to allocate and **4G** with the amount of **maximum memory pool** that you'd like to allocate to the proxy. This is completely dependent on the underlying hardware you use and on your needs. You don't have to do this if you don't want to.
+Make it executable and run it:
 
-To give your script executable permissions `chmod a+x start.sh` To start proxy you can execute from terminal `bash start.sh`.'
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+> **Tip:** On a production server, run the proxy inside a terminal multiplexer
+> such as `screen` or `tmux` (or as a `systemd` service) so it keeps running
+> after you log out.
+
+## Connecting
+
+Once the proxy is running, add a server in Minecraft pointing at the proxy's
+host and port (default `19132`). If something goes wrong, check the
+[Troubleshooting](./troubleshooting) page — most first-time problems are a Java
+version mismatch or a downstream server that still has Xbox auth enabled.

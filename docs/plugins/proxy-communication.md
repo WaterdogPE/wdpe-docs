@@ -4,7 +4,9 @@ title: Proxy Communication
 
 # Proxy Communication
 
-'Its common that bigger networks requires some synchronization and communication between downstream servers and proxy. There are different ways how communication can be implemented.
+Bigger networks often need to synchronize state and pass messages between the
+downstream servers and the proxy. This page explains the common approaches and
+which ones we recommend.
 
 ## Plugin Messages
 This type of communication is not supported in WDPE. But understanding how this method works may be useful.
@@ -15,7 +17,7 @@ More about plugin messages can be found on [Tobias's gist](https://gist.github.c
 
 ## Custom socket communication
 Creating extra connection between downstreams and proxy can be done thought TCP/UDP sockets. Usually this is the most effective way of data synchronization.  
-If you are looking for socket solution we recommend to check [StarGate](https://github.com/Alemiz112/StarGate), a project developed by one of the WaterdogPE developers, which allows exactly such communication. You can get support with this project on our Discord server.
+If you are looking for a socket solution, we recommend [StarGate](https://github.com/Alemiz112/StarGate), a project developed by one of the WaterdogPE developers that allows exactly this kind of communication. Note that StarGate is **not actively maintained** right now, but it is **still functional**. You can get support with this project on our Discord server.
 
 There are more architectures how could communication be done:
 ### Proxy-Server
@@ -44,4 +46,4 @@ Due to lack of knowledge many users tend to use "poor" solutions which will do t
 - Any response system based on SQL or database queries.
 - Shared file databases (and SQLite) between proxy and downstreams
 
-If you really want to use any of this non-recommended methods consider using Redis instead of file, database or sockets solution.'
+If you really want to use any of these non-recommended methods, consider using Redis instead of a file, database, or sockets solution.

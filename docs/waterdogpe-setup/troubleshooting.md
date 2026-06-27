@@ -4,7 +4,7 @@ title: Troubleshooting
 
 # Troubleshooting
 
-'This page covers errors casually reported by users and how to resolve them.
+This page covers errors commonly reported by users and how to resolve them.
 
 # Setup 
 
@@ -17,9 +17,9 @@ These restrictions can be lifted by running the following command *in an adminis
 ### Wrong java version
 The following error can be observed if you start WaterdogPE with the wrong java version:
 
-```Exception in thread "main" java.lang.UnsupportedClassVersionError: dev/waterdog/WaterdogPE has been compiled by a more recent version of the Java Runtime (class file version 55.0), this version of the Java Runtime only recognizes class file versions up to 52.0```
+```Exception in thread "main" java.lang.UnsupportedClassVersionError: dev/waterdog/waterdogpe/WaterdogPE has been compiled by a more recent version of the Java Runtime (class file version 61.0), this version of the Java Runtime only recognizes class file versions up to 52.0```
 
-This happens when you try to run WaterdogPE using Java 8, meanwhile WaterdogPE is built using Java 11. To resolve this, run it using Java 11.
+This happens when you try to run WaterdogPE with a Java version that is too old. Current WaterdogPE releases are built with **Java 17** (class file version 61.0). To resolve this, install and run it using Java 17 or newer. You can check your active version with `java -version`.
 
 ### JSON property "Waterdog_XUID" does not exist
 WaterdogPE passes down information like XUID and IP to the downstream server using custom fields in the Login Packet. If you are using any version of Pocketmine (API 3 or API 4), you may encounter the above error.

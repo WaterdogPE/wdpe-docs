@@ -4,51 +4,47 @@ title: Fallback & Join Handler
 
 # Fallback & Join Handler
 
-'# Introduction
-The `IJoinHandler` and `IReconnectHandler` interfaces are providing plugins with an easy API to change some of the most important parts of your network's behaviour.
+Two interfaces let your plugin control the most important routing decisions a
+proxy makes:
+
+- **`IJoinHandler`** — decides which server a player connects to **when they
+  first join the proxy**.
+- **`IReconnectHandler`** — decides where a player goes **when they get kicked
+  from a downstream server** (a fallback).
+
+Both live in `dev.waterdog.waterdogpe.network.connection.handler`. The proxy
+holds one of each, and you can replace them from a plugin.
 
 ## Setting the handlers
-The ProxyServer object holds one instance of each interface, accessible using `ServerInfo#setReconnectHandler(IReconnectHandler)` and `ServerInfo#setJoinHandler(IJoinHandler)`. <br> **Setting them to null will cause massive issues**. Rather implement NO-OP handlers.
 
-
-## IJoinHandler
-The `IJoinHandler` interface only requires one method to be implemented, namely the `determineServer(ProxiedPlayer)` method. This method is called whenever a player connects **to the proxy**. <br>
-This method can only return an instance of `ServerInfo` or `null`. 
-If the method returns a ServerInfo object, the player's initial connection while be established to that ServerInfo.<br>
-If null is returned, the player will be disconnected from the proxy as there is no server available for it to use. <br>
-
-### Use case
-This method can be used perfectly if you are having multiple lobby-instances in your network (for example). You can then implement f.e. a [Round-Robin determination model](https://en.wikipedia.org/wiki/Round-robin_scheduling) to evenly distribute players over your lobby-instances. You could also send player to servers depending on where they were last, or depending on any other set of conditions that you would like to enforce.
-
-
-
-## IReconnectHandler
-The `IReconnectHandler` is called whenever a player is disconnected from a downstream server. This can be caused by a kick, a server shutdown or even a Proxy &lt;-> Downstream timeout. This method will then be called in order to determine the future of the player. <br>
-The interface only requires the implementation of the `getFallbackServer(ProxiedPlayer, ServerInfo, String)` method, where the ServerInfo is the information holder of the downstream server the player was disconnected from, and the String is the reason the player was disconnected with (if given). 
-
-### Use case
-In some network concepts, you could want to prevent players from being kicked from the network. This could be the case f.e. for minigames-servers where servers might crash / close down, but you'd still want the player to stay on the proxy but instead be sent to your lobby. In that case you'd just return the ServerInfo of the lobby to transfer the player to. <br> <br>
-Important is that you can filter this input by using the `kickMessage` method parameter. With that you could catch players which are being kicked for "Internal Server Error" or "Server closed", but still completly disconnect players that are kicked for "You are banned" or "You have been kicked".<br>
-If you are returning a ServerInfo object, you can also send the player titles, text messages or other types of output to notify him of the disconnect. 
-
-## Important note
-This note is regarding the performance of this system. You **should not** execute any time-expensive code in either of these methods, as that causes some players to lag while the code is running. Instead, try to run f.e. SQL queries periodically in the background, store the results easily usable in-memory and access those results in the method.
-
-
-## Examples
-
-### Setting the handlers
 ```java
-ProxyServer server = ProxyServer.getInstance();
-IReconnectHandler reconnectHandler = new MyCustomReconnectHandler();
-IJoinHandler joinHandler = new MyCustomJoinHandler();
-server.setJoinHandler(joinHandler);
-server.setReconnectHandler(reconnectHandler);
+ProxyServer proxy = ProxyServer.getInstance();
+proxy.setJoinHandler(new MyJoinHandler());
+proxy.setReconnectHandler(new MyReconnectHandler());
 ```
-<br>
 
-### Custom IJoinHandler
-[A simple example plugin](https://github.com/WaterdogPE/Example-plugins/tree/main/RandomServerJoin)
+> **Never set a handler to `null`.** Doing so breaks routing. If you want to
+> disable behaviour, implement a no-op handler instead. WaterdogPE also ships
+> default implementations (`DefaultJoinHandler`, `DefaultReconnectHandler`,
+> `RoundRobinReconnectHandler`) and reads the configured ones from `config.yml`.
+
+## `IJoinHandler`
+
+```java
+public interface IJoinHandler {
+    ServerInfo determineServer(ProxiedPlayer player);
+}
+```
+
+`determineServer` is called whenever a player connects **to the proxy**. Return
+the `ServerInfo` they should land on, or `null` to disconnect them (no server
+available).
+
+### Example
+
+This handler sends every player to the first server in the configured priority
+list — the default behaviour:
+
 ```java
 public class VanillaJoinHandler implements IJoinHandler {
 
@@ -60,27 +56,93 @@ public class VanillaJoinHandler implements IJoinHandler {
 
     @Override
     public ServerInfo determineServer(ProxiedPlayer player) {
-        return this.server.getServer(this.server.getConfiguration().getPriorities().get(0));
+        String firstPriority = this.server.getConfiguration().getPriorities().get(0);
+        return this.server.getServerInfo(firstPriority);
     }
 }
 ```
-*Excerpt of the WaterdogPE code*. <br> 
-Returns the first server from the server priority list.
 
+**Use case:** if you run several lobby instances, you can distribute players
+across them — for example with a
+[round-robin](https://en.wikipedia.org/wiki/Round-robin_scheduling) strategy, or
+based on where the player was last, or any rule you like.
 
-### Custom IReconnectHandler
+## `IReconnectHandler`
 
 ```java
-public class TestFallbackHandler implements IReconnectHandler {
+public interface IReconnectHandler {
+    ServerInfo getFallbackServer(ProxiedPlayer player,
+                                 ServerInfo oldServer,
+                                 ReconnectReason reason,
+                                 String kickMessage);
+}
+```
+
+`getFallbackServer` is called whenever a player is disconnected from a downstream
+server — by a kick, a server shutdown, or a proxy↔downstream timeout. Return a
+`ServerInfo` to move the player there (keeping them on the proxy), or `null` to
+disconnect them from the proxy entirely.
+
+The parameters:
+
+- **`player`** — the affected player.
+- **`oldServer`** — the server they were disconnected from.
+- **`reason`** — a `ReconnectReason` describing *why*: `UNKNOWN`, `TIMEOUT`,
+  `EXCEPTION`, `SERVER_KICK` or `TRANSFER_FAILED`.
+- **`kickMessage`** — the kick message from the downstream server, if any.
+
+> **Migrating from WaterdogPE 1.x:** the method used to be
+> `getFallbackServer(ProxiedPlayer, ServerInfo, String)`. It now takes a
+> `ReconnectReason` as well. The old 3-argument method still exists but is
+> deprecated — override the 4-argument version.
+
+### Example
+
+This handler keeps players on the network by sending them to any other server
+than the one they were kicked from:
+
+```java
+public class FallbackHandler implements IReconnectHandler {
+
     @Override
-    public ServerInfo getFallbackServer(ProxiedPlayer proxiedPlayer, ServerInfo serverInfo, String s) {
-        for(ServerInfo i : proxiedPlayer.getProxy().getServers()){
-            if(!i.getServerName().equals(serverInfo.getServerName())){
-                return i;
+    public ServerInfo getFallbackServer(ProxiedPlayer player, ServerInfo oldServer,
+                                        ReconnectReason reason, String kickMessage) {
+        for (ServerInfo server : player.getProxy().getServers()) {
+            if (!server.getServerName().equals(oldServer.getServerName())) {
+                return server;
             }
         }
-        return null;
+        return null; // nothing else available – player will be disconnected
     }
 }
 ```
-Tries to find a server which is not the server the player was kicked from. If none was found, return null.'
+
+**Use case:** on a minigames network, servers crash or shut down between rounds.
+Instead of kicking the player off the network, send them back to a lobby.
+
+You can be selective using `reason` and `kickMessage` — for example, catch
+players kicked for "Server closed" but let players banned with "You are banned"
+disconnect normally:
+
+```java
+if ("You are banned".equals(kickMessage)) {
+    return null; // let the ban through
+}
+return player.getProxy().getServerInfo("lobby1");
+```
+
+When you return a fallback server you can also send the player a title or message
+to explain what happened.
+
+## Performance note
+
+Both handlers run on the connection path, so they must be **fast**. Do not run
+slow work (SQL queries, HTTP calls) directly inside them — that stalls the player
+while the code runs. Instead, refresh that data periodically in the background
+(see [Scheduling Tasks](./scheduling-task)), keep the results in memory, and read
+the cached values here.
+
+## Full examples
+
+Working example plugins, including a random-server join handler, are available in
+the [Example-Plugins repository](https://github.com/WaterdogPE/Example-Plugins).

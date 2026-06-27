@@ -4,48 +4,82 @@ title: Server Setup
 
 # Server Setup
 
-'Configuring and starting default StarGate server shouldn't be problem. StarGate server comes as plugin for Bungeecord (and its forks) and for WaterdogPE. Both plugins use similar or same API methods and use same config file.
+The StarGate **server** accepts incoming connections from clients (your
+downstream game servers), authenticates them, and routes packets between them.
+It ships as a plugin for WaterdogPE and for BungeeCord (and its forks); both
+plugins share a very similar API and the same config file. The WaterdogPE plugin
+is the recommended one for new setups.
 
-## Server Plugin
-StarGate server is used to handle new pending connections, route/handle incoming packets from the clients. Service uses `tcp` sockets, by default port `47007` is used.  
-You should include `StarGate` plugin into dependencies of your plugin inside of `plugin.yml` file. Your plugin will be than enabled after server plugin.
+## The server plugin
+
+The server handles pending connections and routes/handles packets from the
+clients. It uses **TCP** sockets and listens on port **47007** by default.
+
+If your own plugin uses the StarGate API, add `StarGate` to the `depends` list
+in your `plugin.yml` so your plugin is enabled *after* the StarGate plugin.
+
 ### Config
-- StarGate uses simple authentication based on string password. You can adjust security level by implementing the extra layer of authentication using custom packets.
-- When option `blockSameNames` is enabled and client with same name name included in `HandshakeData`, it will be disconnected.
-- If `debug` is enabled `StarGateLogger#debug()` messages will be shown in console.
 
-This is how default config should look like.
 ```yaml
-# On this port StarGate server will listen for new connections.
+# Port StarGate server will listen on for new connections.
 serverPort: 47007
-# To make connection secure enough set strong password that will be used to authenticate clients.
+# Set a strong password to authenticate clients securely.
 password: "123456789"
-# Clients should not have same name and should be same as name of downstream server.
-# Disabling this option will allow to join more clients using same client name.
-# If enabled, some packets that use client name to identify client, might not work.
+# Clients should not share a name, and the name should match the downstream server.
+# Disabling this allows multiple clients to connect with the same client name,
+# but some packets that identify a client by name may then not work correctly.
 blockSameNames: true
-# Enable debug logger
+# Enable the debug logger
 debug: true
 ```
-### Server Events
-Plugins can use events to handle new connected, authenticated or disconnected session. Here is simple overview of currently available events.
-- `ClientConnectedEvent`: Called once new session is created. At this point session is NOT authenticated and will not accept other than `HandshakePacket`.
-- `ClientAuthenticatedEvent`: Called once session is successfully authenticated using simple password. You can set custom packet handler to session when this event is called. *WaterdogPE plugin marks this event as `@AsyncEvent`.*
-- `ClientDisconnectedEvent`: Called once session has been disconnected or closed. *WaterdogPE plugin marks this event as `@AsyncEvent`.*
+
+- StarGate uses simple **password** authentication. You can add an extra layer
+  of security by implementing your own authentication with custom packets.
+- When `blockSameNames` is enabled and a client connects with a name that is
+  already in use (as included in its `HandshakeData`), it is disconnected.
+- When `debug` is enabled, `StarGateLogger#debug()` messages are shown in the
+  console.
+
+### Server events
+
+Plugins can listen for session lifecycle events. The WaterdogPE plugin fires
+these as standard [WaterdogPE events](/plugins/events-guide):
+
+- **`ClientConnectedEvent`** — a new session is created. At this point the
+  session is **not** authenticated and only accepts a `HandshakePacket`.
+- **`ClientAuthenticatedEvent`** — a session has authenticated with the
+  password. This is where you typically attach a custom packet handler to the
+  session. *Annotated `@AsyncEvent` in the WaterdogPE plugin.*
+- **`ClientDisconnectedEvent`** — a session has disconnected or been closed.
+  *Annotated `@AsyncEvent` in the WaterdogPE plugin.*
+
 ### Registering packets
-Assuming your plugin is enabled after StarGate server plugin, you can register custom packets inside of `onEnable()` method.
+
+If your plugin is enabled after the StarGate server plugin, register your custom
+packets in `onEnable()`:
+
 ```java
 ProtocolCodec codec = StarGate.getInstance().getServer().getProtocolCodec();
 codec.registerPacket(StarGatePackets.SERVER_INFO_REQUEST_PACKET, ServerInfoRequestPacket.class);
 ```
 
-## Implementing Own Server
-To create new server instance you should create new class which will implement `ServerLoader`. Currently, it is used only to provide own `StarGateLogger` implementation. Using public `StarGateServer(bindAddress : InetSocketAddress, password : String, loader : ServerLoader)` constructor we create new server instance. To start server we use `StarGateServer#start()`.  
-Simple example:
+## Running your own server instance
+
+If you are building a standalone application (not a proxy plugin), you can create
+and run a `StarGateServer` directly. Implement the `ServerLoader` interface —
+currently used to supply your own `StarGateLogger` implementation — and pass it
+to the constructor:
+
+```java
+public StarGateServer(InetSocketAddress bindAddress, String password, ServerLoader loader)
+```
+
+`StarGateServer` extends `Thread`, so you start it with `start()`:
+
 ```java
 MyServerLoader loader = new MyServerLoader();
 InetSocketAddress address = new InetSocketAddress("0.0.0.0", 47007);
 StarGateServer server = new StarGateServer(address, "12345", loader);
-// You can register custom packets here
+// Register custom packets on server.getProtocolCodec() here, before starting
 server.start();
-```'
+```

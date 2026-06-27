@@ -4,7 +4,7 @@ title: Proxy Configuration
 
 # Proxy Configuration
 
-'WaterdogPE uses `config.yml` file to store all general settings which will be loaded on startup. Default messages are stored in `lang.ini` file.
+WaterdogPE uses a `config.yml` file to store all general settings, which are loaded on startup. Default messages are stored in the `lang.ini` file. Both files are created automatically the first time you launch the proxy.
 ## Configuration
 Configuration is already commented inside of the file so lets point out only some details.
 
@@ -30,7 +30,7 @@ Higher level = more CPU, less bandwidth usage. Set to 0 to no compression, 9 to 
 Compression between downstream and proxy could be usually disabled or at least lowered. Proxy should have fast enough connection to downstream server. Use `downstream_compression_level` to set proxy to downstream compression level.
 
 #### Upstream compression
-Some clients may have slower connection to your server therefore it is recommended to compress data. Do not set compression level too high or performance may drop. Use `downstream_compression_level` to set proxy to client compression level.
+Some clients may have a slower connection to your server, therefore it is recommended to compress data. Do not set the compression level too high or performance may drop. Use `upstream_compression_level` to set the proxy-to-client compression level.
 
 ### Education Edition mode
 If downstream server has enabled education features, `enable_edu_features` option should be enabled or game may start crashing.  
@@ -123,4 +123,9 @@ Proxy uses TranslationContainer to translate translation key to real message. It
 **Example:**
 ```ini
 waterdog.query.start=Started query on address {%0}
-```'
+```
+
+When a plugin or the proxy looks up `waterdog.query.start` and passes one value,
+the `{%0}` placeholder is replaced with it. You can add your own keys here and
+reference them from plugins using a `TranslationContainer` (see the
+[Players guide](/plugins/players-guide#sending-messages)).'
