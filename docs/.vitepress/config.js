@@ -95,6 +95,7 @@ export default defineConfig({
         items: [
           { text: 'Starting Waterdog', link: '/waterdogpe-setup/starting-waterdog' },
           { text: 'Proxy Configuration', link: '/waterdogpe-setup/proxy-configuration' },
+          { text: 'NetherNet Configuration', link: '/waterdogpe-setup/nethernet-configuration' },
           { text: 'Software Compatibility', link: '/waterdogpe-setup/software-compatibility' },
           { text: 'Troubleshooting', link: '/waterdogpe-setup/troubleshooting' },
         ],
